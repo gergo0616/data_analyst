@@ -10,26 +10,26 @@ pipeline {
 
         stage('Setup Python') {
             steps {
-                sh 'python3 -m venv venv'
-                sh '. venv/bin/activate'
+                bat 'python -m venv venv'
+                bat 'venv\\Scripts\\activate'
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh 'pip install -r requirements.txt'
+                bat 'venv\\Scripts\\pip install -r requirements.txt'
             }
         }
 
         stage('Run Tests') {
             steps {
-                sh 'python -m pytest tests/'
+                bat 'venv\\Scripts\\python -m pytest tests/'
             }
         }
 
         stage('Deploy') {
             steps {
-                sh 'echo "Deploying application..."'
+                bat 'echo "Deploying application..."'
                 // Add your deployment steps here
             }
         }
@@ -37,7 +37,7 @@ pipeline {
 
     post {
         always {
-            sh 'deactivate'
+            bat 'venv\\Scripts\\deactivate'
         }
     }
 }
