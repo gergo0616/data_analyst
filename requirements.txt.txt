@@ -1,0 +1,6 @@
+flask
+yelpapi
+pandas
+matplotlib
+seaborn
+pytest

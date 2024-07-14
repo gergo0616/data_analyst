@@ -1,27 +1,53 @@
-import requests
-from bs4 import BeautifulSoup
+from yelpapi import YelpAPI
 import pandas as pd
 
-def scrape_tripadvisor(url):
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-    }
-    response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    restaurants = soup.find_all('div', class_='_1llCuDZj')
+from yelpapi import YelpAPI
+import pandas as pd
+import time
+
+def get_restaurant_data(api_key, location, limit=50, total_limit=200):
+    yelp_api = YelpAPI(api_key)
+    
+    all_restaurants = []
+    offset = 0
+    
+    while len(all_restaurants) < total_limit:
+        try:
+            response = yelp_api.search_query(
+                term='restaurants',
+                location=location,
+                limit=limit,
+                offset=offset
+            )
+            
+            restaurants = response['businesses']
+            
+            if not restaurants:
+                break
+            
+            all_restaurants.extend(restaurants)
+            offset += len(restaurants)
+            
+            # Respect Yelp API rate limits
+            time.sleep(0.25)  # 250ms delay between requests
+            
+        except Exception as e:
+            print(f"An error occurred while fetching data for {location}: {str(e)}")
+            break
+    
+    if not all_restaurants:
+        print(f"No restaurants found for location: {location}")
+        return pd.DataFrame()
     
     data = []
-    for restaurant in restaurants:
-        name = restaurant.find('a', class_='_15_ydu6b').text.strip()
-        try:
-            rating = float(restaurant.find('svg', class_='UctUV d H0')['aria-label'].split()[0])
-        except:
-            rating = None
-        try:
-            reviews = int(restaurant.find('span', class_='_10Iv7dOs').text.split()[0].replace(',', ''))
-        except:
-            reviews = None
-        
-        data.append({'name': name, 'rating': rating, 'reviews': reviews})
+    for restaurant in all_restaurants[:total_limit]:
+        data.append({
+            'name': restaurant['name'],
+            'rating': restaurant['rating'],
+            'reviews': restaurant['review_count'],
+            'price': restaurant.get('price', 'N/A'),
+            'categories': ', '.join([category['title'] for category in restaurant['categories']]),
+            'address': ', '.join(restaurant['location']['display_address'])
+        })
     
     return pd.DataFrame(data)

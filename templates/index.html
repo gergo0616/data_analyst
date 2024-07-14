@@ -9,9 +9,12 @@
 <body>
     <h1>Restaurant Analyzer</h1>
     <form method="POST">
-        <label for="url">Enter TripAdvisor URL:</label>
-        <input type="text" id="url" name="url" required>
+        <label for="location">Enter Location:</label>
+        <input type="text" id="location" name="location" required>
         <button type="submit">Analyze</button>
     </form>
+    {% if error %}
+    <p class="error">{{ error }}</p>
+    {% endif %}
 </body>
 </html>
